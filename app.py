@@ -12,11 +12,11 @@ st.markdown(
 
 with st.sidebar:
   st.header("⚙️ Configurações e Custos")
-  sku = st.text_input("SKU / Nome do Produto", "Ex: Apoio de Braço")
+  sku = st.text_input("SKU / Nome do Produto", "Informe o Produto")
 
   st.subheader("Custos Diretos")
   custo_produto = st.number_input(
-      "Custo do Produto (R$)", min_value=0.0, value=96.54, step=1.0
+      "Custo do Produto (R$)", min_value=0.0, value=0.0, step=1.0
   )
   frete_compra = st.number_input(
       "Frete de Compra / Insumo (R$)", min_value=0.0, value=0.0, step=1.0
@@ -30,7 +30,7 @@ with st.sidebar:
 
   st.subheader("Impostos e Margem")
   imposto_pct = st.number_input(
-      "Imposto (%)", min_value=0.0, max_value=1.0, value=0.05, step=0.01
+      "Imposto (%)", min_value=0.0, max_value=1.0, value=0.0, step=0.01
   )
   margem_lucro_pct = st.number_input(
       "Margem de Lucro Desejada (%)",
