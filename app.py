@@ -7,12 +7,13 @@ st.set_page_config(
 
 st.title("📊 Calculadora de Precificação: Mercado Livre vs. Shopee")
 st.markdown(
-    "Insira os custos base do produto e escolha o canal de venda para calcular o preço ideal, margens e limites promocionais com as taxas atualizadas."
+    "Insira os custos base do produto e escolha o canal de venda para calcular"
+    " o preço ideal, margens e limites promocionais com as taxas atualizadas."
 )
 
 with st.sidebar:
   st.header("⚙️ Configurações e Custos")
-  sku = st.text_input("SKU / Nome do Produto", "Informe o Produto")
+  sku = st.text_input("SKU / Nome do Produto", "")
 
   st.subheader("Custos Diretos")
   custo_produto = st.number_input(
@@ -29,16 +30,20 @@ with st.sidebar:
   )
 
   st.subheader("Impostos e Margem")
-  imposto_pct = st.number_input(
-      "Imposto (%)", min_value=0.0, max_value=1.0, value=0.0, step=0.01
+  # Entrada em números inteiros (ex: 5 para 5%, 20 para 20%)
+  imposto_pct_int = st.number_input(
+      "Imposto (%)", min_value=0, max_value=100, value=0, step=1
   )
-  margem_lucro_pct = st.number_input(
+  margem_lucro_pct_int = st.number_input(
       "Margem de Lucro Desejada (%)",
-      min_value=0.0,
-      max_value=1.0,
-      value=0.20,
-      step=0.01,
+      min_value=0,
+      max_value=100,
+      value=0,
+      step=1,
   )
+
+imposto_pct = imposto_pct_int / 100.0
+margem_lucro_pct = margem_lucro_pct_int / 100.0
 
 # Escolha da Plataforma
 st.header("🛒 Seleção de Canal de Venda")
@@ -79,10 +84,8 @@ elif canal == "Shopee":
       "Participa do Programa de Frete Grátis Extra?", value=True
   )
   if programa_fg:
-    comissao_pct = (
-        0.20  # Comissão ajustada com o programa de frete grátis extra da Shopee
-    )
-    taxa_fixa_canal = 4.00  # Taxa fixa por item da Shopee
+    comissao_pct = 0.20
+    taxa_fixa_canal = 4.00
     detalhes_canal = (
         "Shopee com Frete Grátis Extra: Comissão de 20% + Taxa Fixa por item."
     )
@@ -108,7 +111,7 @@ if denominador <= 0:
       " 100%! Ajuste os percentuais."
   )
 else:
-  preco_ideal = custo_operacional / denominador
+  preco_ideal = custo_operacional / denominador if denominador > 0 else 0
   val_imposto = preco_ideal * imposto_pct
   val_comissao = preco_ideal * comissao_pct
   lucro_liquido = (
@@ -117,7 +120,7 @@ else:
 
   # Preço Promoção Mínimo (Metade da Margem)
   denominador_promo = 1 - imposto_pct - comissao_pct - (margem_lucro_pct / 2)
-  preco_promo = custo_operacional / denominador_promo
+  preco_promo = custo_operacional / denominador_promo if denominador_promo > 0 else 0
   val_imposto_promo = preco_promo * imposto_pct
   val_comissao_promo = preco_promo * comissao_pct
   lucro_liquido_promo = (
@@ -136,7 +139,10 @@ else:
     status_promo = "OK 🟢"
 
   st.markdown("---")
-  st.subheader(f"📈 Resultados da Precificação para: {sku} ({canal})")
+  st.subheader(
+      f"📈 Resultados da Precificação para:"
+      f" {sku if sku else 'Produto'} ({canal})"
+  )
   st.info(detalhes_canal)
 
   col1, col2, col3, col4 = st.columns(4)
@@ -146,9 +152,7 @@ else:
     st.metric("Preço de Venda Ideal", f"R$ {preco_ideal:.2f}")
   with col3:
     st.metric(
-        "Lucro Líquido Ideal",
-        f"R$ {lucro_liquido:.2f}",
-        f"{margem_lucro_pct*100:.1f}%",
+        "Lucro Líquido Ideal", f"R$ {lucro_liquido:.2f}", f"{margem_lucro_pct_int}%"
     )
   with col4:
     st.metric("Preço Promoção Mínimo", f"R$ {preco_promo:.2f}", status_promo)
@@ -178,7 +182,7 @@ else:
           preco_ideal,
       ],
       "Percentual (%)": [
-          (custo_produto / preco_ideal) * 100,
+          (custo_produto / preco_ideal) * 100 if preco_ideal > 0 else 0,
           (
               (
                   frete_compra
@@ -189,11 +193,13 @@ else:
               )
               / preco_ideal
           )
-          * 100,
+          * 100
+          if preco_ideal > 0
+          else 0,
           imposto_pct * 100,
           comissao_pct * 100,
           margem_lucro_pct * 100,
-          100.0,
+          100.0 if preco_ideal > 0 else 0,
       ],
   })
   st.dataframe(
